@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 dotenv.config({ path: '.env' });
 
-import { uploadToCloudinary } from './lib/cloudinary';
+import { uploadToCloudinary } from '../lib/cloudinary';
 
 async function testUpload() {
   console.log('Testing Cloudinary upload...');

@@ -18,12 +18,25 @@ import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatRupees } from '@/lib/utils';
+import { useAuth } from '@/context/auth-context';
 
 export default function BecomeACompanionPage() {
+  const { isAuthenticated, activeRole, hostProfile } = useAuth();
   const [hourlyRate, setHourlyRate] = useState<number>(550);
   const [weeklyHours, setWeeklyHours] = useState<number>(10);
 
   const monthlyEarnings = hourlyRate * weeklyHours * 4;
+
+  const destinationHref = !isAuthenticated
+    ? '/login?next=/companion/kyc'
+    : activeRole === 'host' && hostProfile?.verificationStatus === 'approved'
+    ? '/companion/dashboard'
+    : '/companion/kyc';
+
+  const buttonText =
+    isAuthenticated && activeRole === 'host' && hostProfile?.verificationStatus === 'approved'
+      ? 'Go to Host Dashboard →'
+      : 'Start Host Application →';
 
   return (
     <div className="min-h-screen flex flex-col bg-paper">
@@ -49,9 +62,9 @@ export default function BecomeACompanionPage() {
             </p>
 
             <div className="pt-2 flex justify-center">
-              <Link href="/login?next=/companion/kyc">
+              <Link href={destinationHref}>
                 <Button variant="primary" size="lg">
-                  <span>Start Host Application →</span>
+                  <span>{buttonText}</span>
                 </Button>
               </Link>
             </div>

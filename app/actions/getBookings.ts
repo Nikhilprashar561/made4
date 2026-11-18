@@ -20,12 +20,26 @@ export interface BookingDisplayItem {
   status: string;
 }
 
-export async function fetchLiveBookings(): Promise<BookingDisplayItem[]> {
+export async function fetchLiveBookings(filter?: {
+  memberId?: string;
+  memberPhone?: string;
+}): Promise<BookingDisplayItem[]> {
   try {
     const list = await db.select().from(schema.bookings).orderBy(desc(schema.bookings.createdAt));
-    
-    return list.map((b) => {
-      const comp = COMPANIONS.find((c) => c.id === b.companionId) || COMPANIONS[0];
+
+    // Filter by member if provided
+    const filteredList = list.filter((b) => {
+      if (filter?.memberId && b.memberId === filter.memberId) return true;
+      if (filter?.memberPhone && b.memberPhone.includes(filter.memberPhone.slice(-10))) return true;
+      if (!filter?.memberId && !filter?.memberPhone) return true;
+      return false;
+    });
+
+    return filteredList.map((b) => {
+      const comp = COMPANIONS.find((c) => c.id === b.companionId) || {
+        ...COMPANIONS[0],
+        name: b.companionId || COMPANIONS[0].name,
+      };
       return {
         id: b.id,
         companion: comp,
@@ -43,21 +57,6 @@ export async function fetchLiveBookings(): Promise<BookingDisplayItem[]> {
     });
   } catch (err) {
     console.error('Failed to fetch bookings from Neon Postgres:', err);
-    return [
-      {
-        id: 'tog-book-sample-8891',
-        companion: COMPANIONS[0],
-        memberName: 'Rahul Sharma',
-        memberPhone: '+91 98765 43210',
-        activity: 'Coffee Chat',
-        date: 'Today, 18 Nov 2026',
-        time: '17:00 IST',
-        duration: '2 Hours',
-        meetingPoint: 'Third Wave Coffee, 100ft Road, Indiranagar',
-        startCode: '8492',
-        escrowAmount: 1374,
-        status: 'Ready for Code Verification',
-      },
-    ];
+    return [];
   }
 }

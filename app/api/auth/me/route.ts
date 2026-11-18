@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
     const refreshToken = req.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
 
     let userId: string | null = null;
+    let tokenRole: string | null = null;
     let shouldRotate = false;
 
     // 1. Try validating access token
@@ -28,6 +29,7 @@ export async function GET(req: NextRequest) {
       const decoded = await verifyAccessToken(accessToken);
       if (decoded?.userId) {
         userId = decoded.userId;
+        tokenRole = decoded.role;
       }
     }
 
@@ -88,6 +90,11 @@ export async function GET(req: NextRequest) {
       return clearAuthCookies(resp);
     }
 
+    // If activeRole in database changed from the token claim, force new token issuance
+    if (tokenRole && tokenRole !== user.activeRole) {
+      shouldRotate = true;
+    }
+
     const [memberProfile] = await db
       .select()
       .from(schema.memberProfiles)
@@ -112,7 +119,7 @@ export async function GET(req: NextRequest) {
       hostProfile: hostProfile || null,
     });
 
-    // If refreshed, issue new cookie pair
+    // If refreshed or role synchronized, issue updated cookie pair
     if (shouldRotate) {
       const newAccessToken = await signAccessToken({
         userId: user.id,

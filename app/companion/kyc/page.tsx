@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import {
   Upload,
@@ -18,7 +19,7 @@ import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
-import { submitKycAction } from '@/app/actions/kyc';
+import { useAuth } from '@/context/auth-context';
 import { uploadImageAction } from '@/app/actions/upload';
 
 interface KycFormData {
@@ -29,7 +30,11 @@ interface KycFormData {
 }
 
 export default function HostKYCPage() {
+  const router = useRouter();
   const toast = useToast();
+  const { user, memberProfile, hostProfile, activeRole, isAuthenticated, isLoading, refreshSession, upgradeToHost } =
+    useAuth();
+
   const [step, setStep] = useState<number>(1);
   const [aadhaarRawDigits, setAadhaarRawDigits] = useState<string>('');
   const [aadhaarFileName, setAadhaarFileName] = useState<string>('');
@@ -45,7 +50,7 @@ export default function HostKYCPage() {
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    reset,
   } = useForm<KycFormData>({
     defaultValues: {
       fullName: '',
@@ -56,17 +61,29 @@ export default function HostKYCPage() {
     mode: 'onChange',
   });
 
+  // Prefill legal name from member profile if available
+  useEffect(() => {
+    if (memberProfile?.fullName && memberProfile.fullName !== 'Togethr Member') {
+      setValue('fullName', memberProfile.fullName, { shouldValidate: true });
+    }
+  }, [memberProfile, setValue]);
+
+  // If already approved host, offer redirect to host dashboard
+  useEffect(() => {
+    if (!isLoading && activeRole === 'host' && hostProfile?.verificationStatus === 'approved') {
+      router.push('/companion/dashboard');
+    }
+  }, [activeRole, hostProfile, isLoading, router]);
+
   const legalName = watch('fullName');
   const dob = watch('dob');
   const upiId = watch('upiId');
 
   // Handle Aadhaar typing with strict 12-digit number-only restriction & auto-spacing
   const handleAadhaarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // 1. Keep digits only
     const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 12);
     setAadhaarRawDigits(digitsOnly);
 
-    // 2. Format with clean spacing: XXXX XXXX XXXX
     const chunks = digitsOnly.match(/.{1,4}/g);
     const formatted = chunks ? chunks.join(' ') : digitsOnly;
     setValue('aadhaarNumber', formatted, { shouldValidate: true });
@@ -117,7 +134,6 @@ export default function HostKYCPage() {
       return;
     }
 
-    // Check age 18+
     const birthDate = new Date(dob);
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -130,7 +146,6 @@ export default function HostKYCPage() {
       return;
     }
 
-    // STRICT 12-DIGIT RESTRICTION
     if (aadhaarRawDigits.length !== 12) {
       if (aadhaarRawDigits.length === 0) {
         toast.error('Please enter your 12-digit Aadhaar number.', 'Aadhaar Number Required');
@@ -166,24 +181,48 @@ export default function HostKYCPage() {
 
     setIsSubmitting(true);
     try {
-      const res = await submitKycAction({
-        fullName: data.fullName,
-        aadhaarNumber: aadhaarRawDigits,
-        aadhaarImage: uploadedImageUrl || aadhaarImageBase64 || aadhaarFileName || 'uploaded-aadhaar-front.jpg',
+      const res = await fetch('/api/companion/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: data.fullName.trim(),
+          dob: data.dob,
+          aadhaarNumber: aadhaarRawDigits,
+          aadhaarImage: uploadedImageUrl || aadhaarImageBase64 || aadhaarFileName || 'uploaded-aadhaar-front.jpg',
+          upiId: data.upiId.trim(),
+        }),
       });
 
-      if (res.success) {
-        setSubmitted(true);
-        setKycReference(res.kycId ? `#TGR-${res.kycId.slice(-6)}` : '#TGR-8921');
-        if (res.imageUrl) {
-          setUploadedImageUrl(res.imageUrl);
-        }
-        toast.success('Your ID details were submitted securely! Our team is reviewing your profile.', 'Details Submitted');
-      } else {
-        toast.error(res.error || 'Failed to submit details. Please try again.', 'Submission Error');
+      let json: any = {};
+      try {
+        json = await res.json();
+      } catch {
+        // Fallback for non-JSON
       }
+
+      if (!res.ok || !json.success) {
+        toast.error(json.error || 'Failed to complete verification. Please try again.', 'Verification Error');
+        return;
+      }
+
+      // Upgrade Zustand state reactively
+      if (json.hostProfile) {
+        upgradeToHost(json.hostProfile);
+      }
+      await refreshSession();
+
+      setSubmitted(true);
+      setKycReference(json.kycReference || '#TGR-8921');
+      toast.success(
+        'Congratulations! You are now an approved and verified Host on Togethr.',
+        'Profile Verified & Approved'
+      );
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.', 'Error');
+      console.error('Upgrade submission error:', err);
+      toast.error(
+        'Something went wrong while completing your verification. Please try again.',
+        'Connection Error'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -223,7 +262,7 @@ export default function HostKYCPage() {
               </div>
               <div className="space-y-1">
                 <h2 className="font-display text-2xl font-black text-ink">
-                  Verification Details Submitted!
+                  You are now a Verified Host!
                 </h2>
                 <span className="inline-block rounded-lg border-brutal-sm bg-white px-3 py-1 font-mono text-xs font-black text-ink">
                   Reference: {kycReference}
@@ -247,7 +286,7 @@ export default function HostKYCPage() {
               )}
 
               <p className="font-body text-xs sm:text-sm text-ink-soft leading-relaxed max-w-md mx-auto">
-                Thank you, <strong>{legalName || 'Host'}</strong>! Your details and photo ID have been received safely. Our safety team will review your application and activate your verified badge within a few hours.
+                Welcome to the host community, <strong>{legalName || 'Host'}</strong>! Your Host profile has been activated and your verified badge is now live. You can start receiving meetup requests immediately.
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
@@ -306,7 +345,7 @@ export default function HostKYCPage() {
                       </span>
                     </div>
 
-                    {/* 12-Digit Aadhaar Number with live counter & strict restrictions */}
+                    {/* 12-Digit Aadhaar Number */}
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <label className="block font-display text-xs font-black uppercase text-ink">
@@ -329,7 +368,7 @@ export default function HostKYCPage() {
                         type="text"
                         inputMode="numeric"
                         pattern="[0-9]*"
-                        maxLength={14} // 12 digits + 2 spaces
+                        maxLength={14}
                         value={watch('aadhaarNumber')}
                         onChange={handleAadhaarChange}
                         placeholder="XXXX XXXX XXXX"

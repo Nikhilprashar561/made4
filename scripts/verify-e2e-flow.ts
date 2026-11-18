@@ -2,11 +2,11 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 dotenv.config({ path: ".env" });
 
-import { createBookingAction } from "./app/actions/booking";
-import { submitKycAction } from "./app/actions/kyc";
-import { fetchLiveBookings } from "./app/actions/getBookings";
-import { db } from "./db";
-import * as schema from "./db/schema";
+import { createBookingAction } from "../app/actions/booking";
+import { submitKycAction } from "../app/actions/kyc";
+import { fetchLiveBookings, BookingDisplayItem } from "../app/actions/getBookings";
+import { db } from "../db";
+import * as schema from "../db/schema";
 import { eq } from "drizzle-orm";
 
 async function verifyFlow() {
@@ -105,7 +105,7 @@ async function verifyFlow() {
   console.log("\n[TEST 3] Fetching all live bookings via fetchLiveBookings()...");
   const liveBookings = await fetchLiveBookings();
   console.log(`Total active bookings retrieved from Neon DB: ${liveBookings.length}`);
-  liveBookings.slice(0, 3).forEach((b, idx) => {
+  liveBookings.slice(0, 3).forEach((b: BookingDisplayItem, idx: number) => {
     console.log(`  ${idx + 1}. [${b.id}] ${b.memberName} with ${b.companion.name} (${b.activity}) -> Code: ${b.startCode}`);
   });
 

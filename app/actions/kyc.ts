@@ -8,9 +8,11 @@ import { uploadToCloudinary } from '@/lib/cloudinary';
 
 export interface SubmitKycInput {
   companionId?: string;
+  userId?: string;
   fullName: string;
   aadhaarNumber: string;
   aadhaarImage: string;
+  upiId?: string;
 }
 
 export async function submitKycAction(input: SubmitKycInput) {
@@ -38,27 +40,30 @@ export async function submitKycAction(input: SubmitKycInput) {
     }
 
     const kycId = `kyc-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const companionId = input.companionId || (input.userId ? `host-${input.userId}` : 'kashish-blr');
 
     // Store in KYC submissions table with Cloudinary URL
     await db.insert(schema.kycSubmissions).values({
       id: kycId,
-      companionId: input.companionId || 'kashish-blr',
+      companionId,
+      userId: input.userId || null,
       fullName: input.fullName,
       aadhaarNumber: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
       aadhaarImage: finalImageUrl,
-      status: 'submitted',
+      status: 'approved',
     });
 
     // If companionId is provided and exists in companions table, update it
-    if (input.companionId) {
+    if (companionId) {
       await db
         .update(schema.companions)
         .set({
           aadhaarNumber: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
           aadhaarImageUrl: finalImageUrl,
           verifiedId: true,
+          upiId: input.upiId || undefined,
         })
-        .where(eq(schema.companions.id, input.companionId));
+        .where(eq(schema.companions.id, companionId));
     }
 
     try {

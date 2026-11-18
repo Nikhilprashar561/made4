@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 
 export interface CreateBookingInput {
   companionId: string;
+  memberId?: string;
   memberName: string;
   memberPhone: string;
   memberEmail?: string;
@@ -33,6 +34,7 @@ export async function createBookingAction(input: CreateBookingInput) {
     const newBooking: schema.InsertBooking = {
       id: bookingId,
       companionId: input.companionId,
+      memberId: input.memberId || null,
       memberName: input.memberName,
       memberPhone: input.memberPhone,
       memberEmail: input.memberEmail || null,
@@ -59,8 +61,9 @@ export async function createBookingAction(input: CreateBookingInput) {
 
     try {
       revalidatePath('/bookings');
+      revalidatePath('/companion/dashboard');
     } catch {
-      // Invariant error occurs if invoked outside Next.js request context (e.g. test scripts)
+      // Invariant error occurs if invoked outside Next.js request context
     }
 
     return {

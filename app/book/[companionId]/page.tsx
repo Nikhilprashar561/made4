@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, use, Suspense } from 'react';
+import React, { useState, use, Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound, useSearchParams } from 'next/navigation';
@@ -27,6 +27,7 @@ import { ACTIVITIES } from '@/lib/data/activities';
 import { calculatePrice, formatRupees } from '@/lib/utils';
 import { ActivityCategory } from '@/lib/types';
 import { createBookingAction } from '@/app/actions/booking';
+import { useAuth } from '@/context/auth-context';
 
 interface BookPageProps {
   params: Promise<{
@@ -47,6 +48,7 @@ function BookPageContent({ params }: BookPageProps) {
   const searchParams = useSearchParams();
   const initialHours = parseInt(searchParams.get('hours') || '1', 10);
   const toast = useToast();
+  const { user, memberProfile, isAuthenticated } = useAuth();
 
   const companion = COMPANIONS.find((c) => c.id === companionId);
   if (!companion) {
@@ -61,26 +63,45 @@ function BookPageContent({ params }: BookPageProps) {
     new Date(Date.now() + 86400000).toISOString().split('T')[0]
   );
   const [time, setTime] = useState<string>('16:00');
-  const [duration, setDuration] = useState<number>(initialHours >= 1 && initialHours <= 4 ? initialHours : 1);
+  const [duration, setDuration] = useState<number>(
+    initialHours >= 1 && initialHours <= 4 ? initialHours : 1
+  );
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [bookingSuccess, setBookingSuccess] = useState<boolean>(false);
   const [startCode, setStartCode] = useState<string>('');
   const [confirmedBookingId, setConfirmedBookingId] = useState<string>('');
-  const [phoneRaw, setPhoneRaw] = useState<string>('9876543210');
+  const [phoneRaw, setPhoneRaw] = useState<string>('');
 
-  const { register, handleSubmit, setValue, watch } = useForm<BookingFormData>({
+  const { register, handleSubmit, setValue, watch, reset } = useForm<BookingFormData>({
     defaultValues: {
-      memberName: 'Rahul Sharma',
-      memberPhone: '9876543210',
+      memberName: '',
+      memberPhone: '',
       meetingPoint: '',
       note: '',
       agreedToPlatonic: false,
     },
   });
 
-  const memberName = watch('memberName');
+  // Pre-fill user data dynamically from Zustand authenticated session
+  useEffect(() => {
+    if (user || memberProfile) {
+      const cleanPhone = user?.phone ? user.phone.replace(/\D/g, '').slice(-10) : '';
+      const name =
+        memberProfile?.fullName && memberProfile.fullName !== 'Togethr Member'
+          ? memberProfile.fullName
+          : '';
+
+      if (name) {
+        setValue('memberName', name);
+      }
+      if (cleanPhone) {
+        setPhoneRaw(cleanPhone);
+        setValue('memberPhone', cleanPhone);
+      }
+    }
+  }, [user, memberProfile, setValue]);
+
   const meetingPoint = watch('meetingPoint');
-  const note = watch('note');
   const agreedToPlatonic = watch('agreedToPlatonic');
 
   const price = calculatePrice(companion.hourlyRate, duration);
@@ -125,6 +146,7 @@ function BookPageContent({ params }: BookPageProps) {
     try {
       const res = await createBookingAction({
         companionId: companion.id,
+        memberId: user?.id,
         memberName: data.memberName.trim(),
         memberPhone: `+91 ${phoneRaw}`,
         activitySlug: selectedActivity,
@@ -204,6 +226,10 @@ function BookPageContent({ params }: BookPageProps) {
           {/* Booking Summary Card */}
           <div className="rounded-2xl border-brutal-sm bg-paper p-5 text-left text-xs font-medium text-ink space-y-2.5">
             <div className="flex justify-between">
+              <span className="font-bold text-ink-muted">Companion:</span>
+              <span className="font-extrabold">{companion.name} ({companion.area})</span>
+            </div>
+            <div className="flex justify-between">
               <span className="font-bold text-ink-muted">Activity:</span>
               <span className="font-extrabold capitalize">{selectedActivity.replace(/-/g, ' ')}</span>
             </div>
@@ -268,12 +294,12 @@ function BookPageContent({ params }: BookPageProps) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="block font-display text-xs font-black uppercase text-ink">
-                        Your Name
+                        Your Full Name
                       </label>
                       <input
                         type="text"
                         {...register('memberName', { required: true })}
-                        placeholder="e.g. Rahul Sharma"
+                        placeholder="e.g. Nikhil"
                         className="w-full rounded-xl border-brutal bg-white px-3.5 py-3 font-display text-xs sm:text-sm font-bold text-ink focus:outline-none focus:shadow-brutal"
                       />
                     </div>

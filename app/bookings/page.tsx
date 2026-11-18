@@ -18,38 +18,25 @@ import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { COMPANIONS } from '@/lib/data/companions';
 import { formatRupees } from '@/lib/utils';
 import { fetchLiveBookings, BookingDisplayItem } from '@/app/actions/getBookings';
-
-const DEFAULT_INITIAL_BOOKINGS: BookingDisplayItem[] = [
-  {
-    id: 'tog-book-sample-8891',
-    companion: COMPANIONS[0],
-    memberName: 'Rahul Sharma',
-    memberPhone: '+91 98765 43210',
-    activity: 'Coffee Chat',
-    date: 'Today, 18 Nov 2026',
-    time: '17:00 IST',
-    duration: '2 Hours',
-    meetingPoint: 'Third Wave Coffee, 100ft Road, Indiranagar',
-    startCode: '8492',
-    escrowAmount: 1374,
-    status: 'Confirmed · Ready to Meet',
-  },
-];
+import { useAuth } from '@/context/auth-context';
 
 export default function MemberBookingsPage() {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'cancelled'>('active');
   const [showSosModal, setShowSosModal] = useState(false);
-  const [bookings, setBookings] = useState<BookingDisplayItem[]>(DEFAULT_INITIAL_BOOKINGS);
-  const [isLoading, setIsLoading] = useState(false);
+  const [bookings, setBookings] = useState<BookingDisplayItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setIsLoading(true);
       try {
-        const live = await fetchLiveBookings();
+        const live = await fetchLiveBookings({
+          memberId: user?.id,
+          memberPhone: user?.phone,
+        });
         setBookings(live);
       } catch (err) {
         console.error('Error fetching live bookings:', err);
@@ -57,8 +44,11 @@ export default function MemberBookingsPage() {
         setIsLoading(false);
       }
     }
-    load();
-  }, []);
+
+    if (!authLoading) {
+      load();
+    }
+  }, [user, authLoading]);
 
   return (
     <div className="min-h-screen flex flex-col bg-paper">
@@ -83,7 +73,7 @@ export default function MemberBookingsPage() {
           <div className="flex gap-2 border-b-brutal pb-2">
             {[
               { id: 'active', label: `🟢 Active & Upcoming (${bookings.length})` },
-              { id: 'completed', label: '✓ Completed (2)' },
+              { id: 'completed', label: '✓ Completed (0)' },
               { id: 'cancelled', label: 'Refunded (0)' },
             ].map((t) => (
               <button
@@ -110,11 +100,13 @@ export default function MemberBookingsPage() {
                 <div className="rounded-2xl border-brutal bg-white p-12 text-center space-y-3">
                   <p className="font-display text-base font-black text-ink">No active bookings yet.</p>
                   <p className="text-xs text-ink-muted">Explore verified companions in your city and book your first meetup.</p>
-                  <Link href="/explore">
-                    <Button variant="primary" size="md">
-                      Explore Companions →
-                    </Button>
-                  </Link>
+                  <div className="pt-2">
+                    <Link href="/explore">
+                      <Button variant="primary" size="md">
+                        Explore Companions →
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               ) : (
                 bookings.map((booking) => (
@@ -126,7 +118,7 @@ export default function MemberBookingsPage() {
                       <div className="flex items-center gap-3">
                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-brutal bg-paper-deep">
                           <Image
-                            src={booking.companion.avatarUrl}
+                            src={booking.companion.avatarUrl || '/avatars/female.svg'}
                             alt={booking.companion.name}
                             fill
                             className="object-cover"
@@ -134,7 +126,7 @@ export default function MemberBookingsPage() {
                         </div>
                         <div>
                           <h2 className="font-display text-xl font-black text-ink">
-                            {booking.companion.name} · {booking.companion.age}
+                            {booking.companion.name}
                           </h2>
                           <span className="text-xs font-bold text-ink-muted">
                             Activity: {booking.activity} · Ref #{booking.id}
@@ -201,18 +193,8 @@ export default function MemberBookingsPage() {
           )}
 
           {activeTab === 'completed' && (
-            <div className="rounded-2xl border-brutal bg-white p-6 shadow-brutal space-y-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-display text-lg font-black text-ink">
-                    Shameera · Gym Partner
-                  </h3>
-                  <p className="text-xs text-ink-muted">14 Nov 2026 · Hauz Khas, Delhi</p>
-                </div>
-                <Badge variant="lime" size="sm">
-                  ✓ Completed & Reviewed (★ 5.0)
-                </Badge>
-              </div>
+            <div className="rounded-2xl border-brutal bg-white p-8 text-center text-xs text-ink-muted">
+              No completed meetups yet.
             </div>
           )}
 
