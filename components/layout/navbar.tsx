@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Menu,
   MapPin,
@@ -23,6 +24,7 @@ import { useAuth } from '@/context/auth-context';
 import { AvatarVector } from '@/components/ui/avatar-vector';
 
 export function Navbar() {
+  const router = useRouter();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState('bengaluru');
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
@@ -78,9 +80,16 @@ export function Navbar() {
               <ShieldCheck className="h-4 w-4 text-ink" />
               <span>Safety</span>
             </Link>
-            <Link href="/become-a-companion" className="hover:text-lavender transition-colors">
-              Become a Host
-            </Link>
+            {activeRole === 'host' ? (
+              <Link href="/companion/dashboard" className="flex items-center gap-1.5 hover:text-lavender transition-colors">
+                <Sparkles className="h-4 w-4 text-ink" />
+                <span>Host Portal</span>
+              </Link>
+            ) : (
+              <Link href="/become-a-companion" className="hover:text-lavender transition-colors">
+                Become a Host
+              </Link>
+            )}
           </nav>
 
           {/* Right Area: City Selector + Action CTAs */}
@@ -107,8 +116,9 @@ export function Navbar() {
                       onClick={() => {
                         setSelectedCity(c.slug);
                         setIsCityDropdownOpen(false);
+                        router.push(`/${c.slug}/companions`);
                       }}
-                      className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-bold text-ink hover:bg-lime transition-colors"
+                      className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-bold text-ink hover:bg-lime transition-colors cursor-pointer"
                     >
                       <span>{c.name}</span>
                       <span className="text-[10px] text-ink-muted">{c.activeCount} hosts</span>

@@ -8,6 +8,7 @@ import { COMPANIONS } from '@/lib/data/companions';
 export interface BookingDisplayItem {
   id: string;
   companion: typeof COMPANIONS[0];
+  companionId: string;
   memberName: string;
   memberPhone: string;
   activity: string;
@@ -18,6 +19,8 @@ export interface BookingDisplayItem {
   startCode: string;
   escrowAmount: number;
   status: string;
+  rawStatus: 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | string;
+  paymentStatus: 'paid_escrow' | 'refunded' | 'released' | string;
 }
 
 export async function fetchLiveBookings(filter?: {
@@ -38,11 +41,19 @@ export async function fetchLiveBookings(filter?: {
     return filteredList.map((b) => {
       const comp = COMPANIONS.find((c) => c.id === b.companionId) || {
         ...COMPANIONS[0],
+        id: b.companionId || 'kashish-blr',
         name: b.companionId || COMPANIONS[0].name,
       };
+
+      let displayStatus = 'Ready for Code Verification';
+      if (b.status === 'in_progress') displayStatus = 'Active Meetup In Progress';
+      else if (b.status === 'completed') displayStatus = 'Completed';
+      else if (b.status === 'cancelled') displayStatus = 'Cancelled & Refunded';
+
       return {
         id: b.id,
         companion: comp,
+        companionId: b.companionId || 'kashish-blr',
         memberName: b.memberName,
         memberPhone: b.memberPhone,
         activity: b.activitySlug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
@@ -52,7 +63,9 @@ export async function fetchLiveBookings(filter?: {
         meetingPoint: b.meetingPoint,
         startCode: b.startCode,
         escrowAmount: b.totalPayable,
-        status: (b.status === 'confirmed' ? 'Ready for Code Verification' : b.status) || 'Ready for Code Verification',
+        status: displayStatus,
+        rawStatus: b.status || 'confirmed',
+        paymentStatus: b.paymentStatus || 'paid_escrow',
       };
     });
   } catch (err) {

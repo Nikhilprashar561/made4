@@ -26,7 +26,7 @@ export function MobileDrawer({ isOpen, onClose, selectedCity }: MobileDrawerProp
       : memberProfile?.fullName || 'Member';
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-between bg-paper p-6 overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex flex-col justify-between bg-paper p-5 sm:p-6 overflow-y-auto pb-12 animate-in fade-in duration-200">
       <div>
         {/* Header with Close */}
         <div className="flex items-center justify-between pb-4 border-b-brutal">
@@ -152,17 +152,31 @@ export function MobileDrawer({ isOpen, onClose, selectedCity }: MobileDrawerProp
             <Badge variant="lime" size="sm">Strict</Badge>
           </Link>
 
-          <Link
-            href="/become-a-companion"
-            onClick={onClose}
-            className="flex items-center justify-between rounded-xl border-brutal bg-paper-deep p-3.5 shadow-brutal-sm btn-press text-ink"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-ink" />
-              <span>Become a Host</span>
-            </div>
-            <Badge variant="dark" size="sm">Earn ₹600/hr</Badge>
-          </Link>
+          {activeRole === 'host' ? (
+            <Link
+              href="/companion/dashboard"
+              onClick={onClose}
+              className="flex items-center justify-between rounded-xl border-brutal bg-lime p-3.5 shadow-brutal-sm btn-press text-ink"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-ink" />
+                <span>Host Portal</span>
+              </div>
+              <Badge variant="dark" size="sm">Active Host</Badge>
+            </Link>
+          ) : (
+            <Link
+              href="/become-a-companion"
+              onClick={onClose}
+              className="flex items-center justify-between rounded-xl border-brutal bg-paper-deep p-3.5 shadow-brutal-sm btn-press text-ink"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-ink" />
+                <span>Become a Host</span>
+              </div>
+              <Badge variant="dark" size="sm">Earn ₹600/hr</Badge>
+            </Link>
+          )}
 
           <Link
             href="/faq"

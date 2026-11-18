@@ -13,42 +13,132 @@ import {
   AlertTriangle,
   RotateCcw,
   Lock,
+  XCircle,
+  Star,
+  Loader2,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/toast';
 import { formatRupees } from '@/lib/utils';
 import { fetchLiveBookings, BookingDisplayItem } from '@/app/actions/getBookings';
 import { useAuth } from '@/context/auth-context';
 
 export default function MemberBookingsPage() {
+  const toast = useToast();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'cancelled'>('active');
   const [showSosModal, setShowSosModal] = useState(false);
+  const [cancelModalBooking, setCancelModalBooking] = useState<BookingDisplayItem | null>(null);
+  const [reviewModalBooking, setReviewModalBooking] = useState<BookingDisplayItem | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
   const [bookings, setBookings] = useState<BookingDisplayItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      setIsLoading(true);
-      try {
-        const live = await fetchLiveBookings({
-          memberId: user?.id,
-          memberPhone: user?.phone,
-        });
-        setBookings(live);
-      } catch (err) {
-        console.error('Error fetching live bookings:', err);
-      } finally {
-        setIsLoading(false);
-      }
+  const loadBookings = async () => {
+    setIsLoading(true);
+    try {
+      const live = await fetchLiveBookings({
+        memberId: user?.id,
+        memberPhone: user?.phone,
+      });
+      setBookings(live);
+    } catch (err) {
+      console.error('Error fetching live bookings:', err);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
+  useEffect(() => {
     if (!authLoading) {
-      load();
+      loadBookings();
     }
   }, [user, authLoading]);
+
+  // Tab Filtering
+  const activeBookings = bookings.filter(
+    (b) => b.rawStatus === 'confirmed' || b.rawStatus === 'in_progress'
+  );
+  const completedBookings = bookings.filter((b) => b.rawStatus === 'completed');
+  const cancelledBookings = bookings.filter((b) => b.rawStatus === 'cancelled');
+
+  const handleCancelBooking = async () => {
+    if (!cancelModalBooking) return;
+    setCancelling(true);
+    try {
+      const res = await fetch('/api/bookings/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: cancelModalBooking.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Meetup cancelled and refunded successfully.', 'Meetup Cancelled');
+        setBookings((prev) =>
+          prev.map((b) =>
+            b.id === cancelModalBooking.id
+              ? { ...b, rawStatus: 'cancelled', status: 'Cancelled & Refunded', paymentStatus: 'refunded' }
+              : b
+          )
+        );
+        setCancelModalBooking(null);
+        setActiveTab('cancelled');
+      } else {
+        toast.error(data.error || 'Failed to cancel meetup. Please try again.', 'Cancellation Error');
+      }
+    } catch {
+      toast.error('Network error while cancelling meetup. Please try again.', 'Error');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewModalBooking) return;
+    if (reviewComment.trim().length < 5) {
+      toast.error('Please write a short review (at least 5 characters).', 'Review Required');
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companionId: reviewModalBooking.companionId,
+          bookingId: reviewModalBooking.id,
+          rating: reviewRating,
+          activityName: reviewModalBooking.activity,
+          comment: reviewComment.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success('Your review has been published on the companion profile!', 'Review Submitted');
+        setBookings((prev) =>
+          prev.map((b) =>
+            b.id === reviewModalBooking.id ? { ...b, rawStatus: 'completed', status: 'Completed' } : b
+          )
+        );
+        setReviewModalBooking(null);
+        setReviewComment('');
+      } else {
+        toast.error(data.error || 'Failed to submit review.', 'Error');
+      }
+    } catch {
+      toast.error('Network error submitting review. Please try again.', 'Error');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-paper">
@@ -65,16 +155,16 @@ export default function MemberBookingsPage() {
               My Meetups
             </h1>
             <p className="font-body text-xs sm:text-sm text-ink-soft">
-              Track your upcoming bookings, view your secret 4-digit start codes, and review completed meetups.
+              Track your upcoming bookings, view your secret 4-digit start codes, review completed meetups, or cancel anytime before the session.
             </p>
           </div>
 
           {/* Tab Selector */}
           <div className="flex gap-2 border-b-brutal pb-2">
             {[
-              { id: 'active', label: `🟢 Active & Upcoming (${bookings.length})` },
-              { id: 'completed', label: '✓ Completed (0)' },
-              { id: 'cancelled', label: 'Refunded (0)' },
+              { id: 'active', label: `🟢 Active & Upcoming (${activeBookings.length})` },
+              { id: 'completed', label: `✓ Completed (${completedBookings.length})` },
+              { id: 'cancelled', label: `Refunded (${cancelledBookings.length})` },
             ].map((t) => (
               <button
                 key={t.id}
@@ -90,16 +180,17 @@ export default function MemberBookingsPage() {
             ))}
           </div>
 
+          {/* Active Tab */}
           {activeTab === 'active' && (
             <div className="space-y-6">
               {isLoading ? (
                 <div className="rounded-2xl border-brutal bg-white p-12 text-center font-display text-sm font-bold text-ink">
                   Loading your bookings...
                 </div>
-              ) : bookings.length === 0 ? (
+              ) : activeBookings.length === 0 ? (
                 <div className="rounded-2xl border-brutal bg-white p-12 text-center space-y-3">
-                  <p className="font-display text-base font-black text-ink">No active bookings yet.</p>
-                  <p className="text-xs text-ink-muted">Explore verified companions in your city and book your first meetup.</p>
+                  <p className="font-display text-base font-black text-ink">No active bookings right now.</p>
+                  <p className="text-xs text-ink-muted">Explore verified companions in your city and book your next meetup.</p>
                   <div className="pt-2">
                     <Link href="/explore">
                       <Button variant="primary" size="md">
@@ -109,7 +200,7 @@ export default function MemberBookingsPage() {
                   </div>
                 </div>
               ) : (
-                bookings.map((booking) => (
+                activeBookings.map((booking) => (
                   <div
                     key={booking.id}
                     className="rounded-3xl border-brutal bg-white p-6 sm:p-8 shadow-brutal-lg space-y-6"
@@ -134,7 +225,7 @@ export default function MemberBookingsPage() {
                         </div>
                       </div>
 
-                      <Badge variant="lime" size="md">
+                      <Badge variant={booking.rawStatus === 'in_progress' ? 'sunny' : 'lime'} size="md">
                         🟢 {booking.status}
                       </Badge>
                     </div>
@@ -171,19 +262,90 @@ export default function MemberBookingsPage() {
                       </div>
                     </div>
 
-                    {/* Emergency SOS & Support Trigger */}
-                    <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    {/* Actions Row */}
+                    <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t-brutal-sm">
                       <div className="flex items-center gap-2 text-xs font-bold text-ink-muted">
                         <Lock className="h-4 w-4 text-emerald-600" />
                         <span>Protected Payment: {formatRupees(booking.escrowAmount)}</span>
                       </div>
 
+                      <div className="flex items-center gap-2.5">
+                        {booking.rawStatus === 'in_progress' ? (
+                          <button
+                            onClick={() => setReviewModalBooking(booking)}
+                            className="inline-flex items-center gap-1.5 rounded-xl border-brutal bg-lime px-3.5 py-2 font-display text-xs font-black text-ink shadow-brutal-sm hover:bg-lime-400 btn-press cursor-pointer"
+                          >
+                            <Star className="h-3.5 w-3.5 fill-ink" />
+                            <span>Complete & Review</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setCancelModalBooking(booking)}
+                            className="inline-flex items-center gap-1.5 rounded-xl border-brutal bg-white px-3.5 py-2 font-display text-xs font-bold text-ink hover:bg-danger-soft hover:text-danger btn-press cursor-pointer"
+                          >
+                            <XCircle className="h-3.5 w-3.5" />
+                            <span>Cancel Meetup</span>
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => setShowSosModal(true)}
+                          className="inline-flex items-center gap-1.5 rounded-xl border-brutal bg-danger px-4 py-2 font-display text-xs font-black text-white shadow-brutal-sm hover:bg-red-600 btn-press cursor-pointer"
+                        >
+                          <ShieldAlert className="h-4 w-4" />
+                          <span>Emergency SOS</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Completed Tab */}
+          {activeTab === 'completed' && (
+            <div className="space-y-4">
+              {completedBookings.length === 0 ? (
+                <div className="rounded-2xl border-brutal bg-white p-12 text-center text-xs text-ink-muted space-y-2">
+                  <p className="font-display text-sm font-black text-ink">No completed meetups yet.</p>
+                  <p>Completed sessions will appear here with verified badges and rating records.</p>
+                </div>
+              ) : (
+                completedBookings.map((b) => (
+                  <div
+                    key={b.id}
+                    className="rounded-2xl border-brutal bg-white p-6 shadow-brutal flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border-brutal bg-paper-deep">
+                        <Image
+                          src={b.companion.avatarUrl || '/avatars/female.svg'}
+                          alt={b.companion.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-display text-base font-black text-ink">
+                          {b.companion.name} · {b.activity}
+                        </h3>
+                        <p className="text-xs text-ink-muted">
+                          {b.date} · {b.meetingPoint}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Badge variant="lime" size="sm">
+                        ✓ Meetup Completed
+                      </Badge>
                       <button
-                        onClick={() => setShowSosModal(true)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border-brutal bg-danger px-4 py-2 font-display text-xs font-black text-white shadow-brutal-sm hover:bg-red-600 btn-press cursor-pointer"
+                        onClick={() => setReviewModalBooking(b)}
+                        className="inline-flex items-center gap-1 rounded-xl border-brutal bg-sunny px-3 py-1 font-display text-xs font-black text-ink shadow-brutal-sm btn-press cursor-pointer"
                       >
-                        <ShieldAlert className="h-4 w-4" />
-                        <span>Emergency SOS</span>
+                        <Star className="h-3 w-3 fill-ink" />
+                        <span>Leave Review</span>
                       </button>
                     </div>
                   </div>
@@ -192,15 +354,170 @@ export default function MemberBookingsPage() {
             </div>
           )}
 
-          {activeTab === 'completed' && (
-            <div className="rounded-2xl border-brutal bg-white p-8 text-center text-xs text-ink-muted">
-              No completed meetups yet.
+          {/* Cancelled Tab */}
+          {activeTab === 'cancelled' && (
+            <div className="space-y-4">
+              {cancelledBookings.length === 0 ? (
+                <div className="rounded-2xl border-brutal bg-white p-12 text-center text-xs text-ink-muted">
+                  No cancelled or refunded bookings.
+                </div>
+              ) : (
+                cancelledBookings.map((b) => (
+                  <div
+                    key={b.id}
+                    className="rounded-2xl border-brutal bg-white p-5 shadow-brutal flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-display text-base font-black text-ink">
+                          {b.companion.name} · {b.activity}
+                        </h3>
+                        <Badge variant="dark" size="sm">
+                          Refunded
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-ink-muted">
+                        Ref #{b.id} · Scheduled for {b.date} at {b.time}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300">
+                        100% Refunded ({formatRupees(b.escrowAmount)})
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
 
-          {activeTab === 'cancelled' && (
-            <div className="rounded-2xl border-brutal bg-white p-8 text-center text-xs text-ink-muted">
-              No cancelled or refunded bookings.
+          {/* Cancellation Confirmation Modal */}
+          {cancelModalBooking && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+              <div className="w-full max-w-md rounded-3xl border-brutal bg-white p-6 sm:p-8 shadow-brutal-lg space-y-4 animate-in fade-in">
+                <div className="flex items-center gap-2 text-ink font-display text-lg font-black">
+                  <XCircle className="h-6 w-6 text-danger" />
+                  <span>Cancel Meetup Booking?</span>
+                </div>
+
+                <p className="font-body text-xs sm:text-sm text-ink-soft leading-relaxed">
+                  Are you sure you want to cancel your meetup with <strong>{cancelModalBooking.companion.name}</strong> on {cancelModalBooking.date}?
+                </p>
+
+                <div className="rounded-xl border-brutal-sm bg-lime-soft p-3 text-xs font-bold text-ink space-y-1">
+                  <span>💰 100% Full Escrow Refund:</span>
+                  <p className="font-mono text-sm font-black text-ink">
+                    {formatRupees(cancelModalBooking.escrowAmount)} will be released back to you immediately.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    onClick={() => setCancelModalBooking(null)}
+                    disabled={cancelling}
+                    className="w-1/2 rounded-xl border-brutal bg-white p-3 font-display text-xs font-bold text-ink hover:bg-paper-deep btn-press"
+                  >
+                    Keep Booking
+                  </button>
+
+                  <button
+                    onClick={handleCancelBooking}
+                    disabled={cancelling}
+                    className="w-1/2 rounded-xl border-brutal bg-danger p-3 font-display text-xs font-black text-white shadow-brutal btn-press flex items-center justify-center gap-1.5"
+                  >
+                    {cancelling ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <span>Yes, Cancel & Refund</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Review Submission Modal */}
+          {reviewModalBooking && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+              <div className="w-full max-w-md rounded-3xl border-brutal bg-white p-6 sm:p-8 shadow-brutal-lg space-y-4 animate-in fade-in">
+                <div className="space-y-1">
+                  <Badge variant="sunny" size="sm">
+                    Verified Feedback
+                  </Badge>
+                  <h3 className="font-display text-xl font-black text-ink">
+                    Rate Your Meetup with {reviewModalBooking.companion.name}
+                  </h3>
+                  <p className="text-xs text-ink-muted">
+                    Your honest review helps keep the Togethr community respectful and trustworthy.
+                  </p>
+                </div>
+
+                <form onSubmit={handleSubmitReview} className="space-y-4">
+                  {/* Star Rating Picker */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-black uppercase text-ink">
+                      Your Rating (1 to 5 Stars)
+                    </label>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setReviewRating(s)}
+                          className={`p-2 rounded-xl border-brutal-sm cursor-pointer transition-all ${
+                            reviewRating >= s ? 'bg-sunny' : 'bg-paper'
+                          }`}
+                        >
+                          <Star
+                            className={`h-6 w-6 ${
+                              reviewRating >= s ? 'fill-ink text-ink' : 'text-ink-muted'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Comment */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-black uppercase text-ink">
+                      Your Review
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="Share how your meetup went (e.g. prompt arrival, fun conversation, great coffee spot)..."
+                      className="w-full rounded-xl border-brutal bg-white p-3 font-body text-xs sm:text-sm text-ink focus:outline-none focus:shadow-brutal"
+                      required
+                    />
+                  </div>
+
+                  <div className="pt-2 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setReviewModalBooking(null)}
+                      disabled={submittingReview}
+                      className="w-1/2 rounded-xl border-brutal bg-white p-3 font-display text-xs font-bold text-ink hover:bg-paper-deep btn-press"
+                    >
+                      Cancel
+                    </button>
+
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="md"
+                      disabled={submittingReview || reviewComment.trim().length < 5}
+                    >
+                      {submittingReview ? 'Submitting...' : 'Post Review →'}
+                    </Button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
 
