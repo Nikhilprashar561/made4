@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Search, MapPin, Sparkles, Filter, X } from 'lucide-react';
+import { Search, MapPin, Sparkles, Filter, X, ShieldCheck } from 'lucide-react';
 import { ACTIVITIES } from '@/lib/data/activities';
 import { CITIES } from '@/lib/data/cities';
 import { ActivityCategory } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { ActivityIcon } from '@/components/ui/activity-icon';
+import { StatusPulse } from '@/components/ui/status-pulse';
 
 interface FilterBarProps {
   selectedCity: string;
@@ -75,7 +77,7 @@ export function FilterBar({
             onChange={(e) => onCityChange(e.target.value)}
             className="w-full rounded-xl border-brutal bg-white pl-10 pr-8 py-2.5 font-display text-xs sm:text-sm font-extrabold text-ink focus:outline-none focus:shadow-brutal appearance-none cursor-pointer"
           >
-            <option value="all">📍 All Cities Across India</option>
+            <option value="all">All Cities Across India</option>
             {CITIES.map((c) => (
               <option key={c.slug} value={c.slug}>
                 {c.name} ({c.activeCount} verified hosts)
@@ -91,26 +93,27 @@ export function FilterBar({
           {/* Free Today Toggle */}
           <button
             onClick={() => onFreeTodayChange(!freeTodayOnly)}
-            className={`inline-flex items-center gap-1.5 rounded-full border-brutal-sm px-3.5 py-1.5 font-display text-xs font-black transition-all cursor-pointer ${
+            className={`group inline-flex items-center gap-2 rounded-full border-brutal-sm px-3.5 py-1.5 font-display text-xs font-black transition-all cursor-pointer ${
               freeTodayOnly
                 ? 'bg-lime text-ink shadow-brutal-sm'
                 : 'bg-white text-ink-soft hover:bg-paper-deep'
             }`}
           >
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>🟢 Free Today</span>
+            <StatusPulse size="xs" status="active" />
+            <span>Free Today</span>
           </button>
 
           {/* Women Only Hosts Toggle */}
           <button
             onClick={() => onWomenOnlyHostsChange(!womenOnlyHosts)}
-            className={`inline-flex items-center gap-1.5 rounded-full border-brutal-sm px-3.5 py-1.5 font-display text-xs font-black transition-all cursor-pointer ${
+            className={`group inline-flex items-center gap-1.5 rounded-full border-brutal-sm px-3.5 py-1.5 font-display text-xs font-black transition-all cursor-pointer ${
               womenOnlyHosts
                 ? 'bg-pink text-ink shadow-brutal-sm'
                 : 'bg-white text-ink-soft hover:bg-paper-deep'
             }`}
           >
-            <span>👩 Women Hosts for Women</span>
+            <ShieldCheck className="h-3.5 w-3.5 text-pink-700 stroke-[2.25]" />
+            <span>Women Hosts for Women</span>
           </button>
         </div>
 
@@ -139,13 +142,14 @@ export function FilterBar({
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => onActivityChange('all')}
-            className={`rounded-full border-brutal-sm px-3 py-1 font-display text-xs font-extrabold transition-all cursor-pointer ${
+            className={`group inline-flex items-center gap-1.5 rounded-full border-brutal-sm px-3 py-1 font-display text-xs font-extrabold transition-all cursor-pointer ${
               selectedActivity === 'all'
                 ? 'bg-ink text-paper shadow-brutal-sm'
                 : 'bg-white text-ink hover:bg-paper-deep'
             }`}
           >
-            ✨ All Activities
+            <Sparkles className="h-3 w-3 stroke-[2.25] text-sunny" />
+            <span>All Activities</span>
           </button>
 
           {ACTIVITIES.map((act) => {
@@ -154,13 +158,13 @@ export function FilterBar({
               <button
                 key={act.slug}
                 onClick={() => onActivityChange(act.slug)}
-                className={`inline-flex items-center gap-1 rounded-full border-brutal-sm px-3 py-1 font-display text-xs font-extrabold transition-all cursor-pointer ${
+                className={`group inline-flex items-center gap-1.5 rounded-full border-brutal-sm px-3 py-1 font-display text-xs font-extrabold transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-sunny text-ink shadow-brutal-sm'
                     : 'bg-white text-ink hover:bg-paper-deep'
                 }`}
               >
-                <span>{act.emoji}</span>
+                <ActivityIcon slug={act.slug} size="xs" animated />
                 <span>{act.name}</span>
               </button>
             );

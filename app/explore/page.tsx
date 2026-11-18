@@ -9,7 +9,7 @@ import { CompanionCard } from '@/components/companion/companion-card';
 import { COMPANIONS } from '@/lib/data/companions';
 import { ActivityCategory } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Users } from 'lucide-react';
+import { Sparkles, Users, Search } from 'lucide-react';
 
 interface SearchSyncProps {
   onSync: (city: string, activity: ActivityCategory | 'all', freeToday: boolean) => void;
@@ -142,7 +142,9 @@ export default function ExplorePage() {
           ) : (
             /* Empty State */
             <div className="rounded-3xl border-brutal bg-white p-12 text-center space-y-4 shadow-brutal-sm max-w-md mx-auto">
-              <div className="text-4xl">🔍</div>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-brutal bg-sunny shadow-brutal-sm text-ink">
+                <Search className="h-8 w-8 stroke-[2.25]" />
+              </div>
               <h3 className="font-display text-xl font-black text-ink">
                 No companions found matching these filters
               </h3>

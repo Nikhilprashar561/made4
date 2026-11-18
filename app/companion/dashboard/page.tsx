@@ -373,9 +373,18 @@ export default function HostDashboardPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-ink-soft">
-                      <span>📅 {req.date}</span>
-                      <span>⏰ {req.time || req.startTime} ({req.duration || `${req.durationHours || 1} hr`})</span>
-                      <span>📍 {req.venue || req.meetingPoint}</span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5 text-ink stroke-[2.25]" />
+                        <span>{req.date}</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5 text-ink stroke-[2.25]" />
+                        <span>{req.time || req.startTime} ({req.duration || `${req.durationHours || 1} hr`})</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5 text-ink stroke-[2.25]" />
+                        <span>{req.venue || req.meetingPoint}</span>
+                      </span>
                     </div>
 
                     <div className="text-xs font-extrabold text-ink">
@@ -406,8 +415,9 @@ export default function HostDashboardPage() {
                         </button>
                       </>
                     ) : (
-                      <Badge variant="lime" size="md">
-                        ✓ Accepted · Meetup Active
+                      <Badge variant="lime" size="md" className="inline-flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5 stroke-[2.25]" />
+                        <span>Accepted · Meetup Active</span>
                       </Badge>
                     )}
                   </div>

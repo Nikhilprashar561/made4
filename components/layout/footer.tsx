@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ShieldAlert, Heart } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
+import { ActivityIcon } from '@/components/ui/activity-icon';
 import { ACTIVITIES } from '@/lib/data/activities';
 import { CITIES } from '@/lib/data/cities';
 
@@ -51,9 +52,9 @@ export function Footer() {
                 <li key={act.slug}>
                   <Link
                     href={`/explore/${act.slug}`}
-                    className="hover:text-lavender hover:underline transition-colors flex items-center gap-1.5"
+                    className="hover:text-lavender hover:underline transition-colors flex items-center gap-2 group"
                   >
-                    <span>{act.emoji}</span>
+                    <ActivityIcon slug={act.slug} size="xs" animated />
                     <span>{act.name}</span>
                   </Link>
                 </li>

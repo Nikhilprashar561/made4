@@ -22,6 +22,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Accordion } from '@/components/ui/accordion';
 import { CompanionCard } from '@/components/companion/companion-card';
+import { ActivityIcon } from '@/components/ui/activity-icon';
+import { StatusPulse } from '@/components/ui/status-pulse';
 import { ACTIVITIES } from '@/lib/data/activities';
 import { COMPANIONS } from '@/lib/data/companions';
 import { CITIES } from '@/lib/data/cities';
@@ -134,7 +136,7 @@ export default function HomePage() {
                       <option value="all">Any Activity</option>
                       {ACTIVITIES.map((a) => (
                         <option key={a.slug} value={a.slug}>
-                          {a.emoji} {a.name}
+                          {a.name}
                         </option>
                       ))}
                     </select>
@@ -179,11 +181,13 @@ export default function HomePage() {
                   {/* Top Featured Companion Card */}
                   <div className="relative rounded-2xl border-brutal bg-white p-5 shadow-brutal-lg rotate-1 space-y-4">
                     <div className="flex items-center justify-between">
-                      <Badge variant="lime" size="sm">
-                        🟢 Free in 2 hours
+                      <Badge variant="lime" size="sm" className="inline-flex items-center gap-1.5">
+                        <StatusPulse size="xs" status="active" />
+                        <span>Free in 2 hours</span>
                       </Badge>
-                      <span className="font-display text-xs font-black text-ink-muted">
-                        📍 Indiranagar, BLR
+                      <span className="inline-flex items-center gap-1 font-display text-xs font-black text-ink-muted">
+                        <MapPin className="h-3 w-3 text-ink-muted" />
+                        <span>Indiranagar, BLR</span>
                       </span>
                     </div>
 
@@ -204,11 +208,13 @@ export default function HomePage() {
                           Design Student & Indie Music Fan
                         </p>
                         <div className="mt-1 flex gap-1">
-                          <Badge variant="sunny" size="sm">
-                            🛍️ Shopping
+                          <Badge variant="sunny" size="sm" className="inline-flex items-center gap-1">
+                            <ActivityIcon slug="shopping-buddy" size="xs" />
+                            <span>Shopping</span>
                           </Badge>
-                          <Badge variant="paper" size="sm">
-                            ☕ Coffee
+                          <Badge variant="paper" size="sm" className="inline-flex items-center gap-1">
+                            <ActivityIcon slug="coffee-chat" size="xs" />
+                            <span>Coffee</span>
                           </Badge>
                         </div>
                       </div>
@@ -239,18 +245,19 @@ export default function HomePage() {
         </section>
 
         {/* =========================================================================
-            SECTION 2: 🟢 FREE TODAY LIVE CAROUSEL
+            SECTION 2: FREE TODAY LIVE CAROUSEL
            ========================================================================= */}
         <section className="border-b-brutal bg-white py-14 sm:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
               <div>
-                <div className="inline-flex items-center gap-1.5 rounded-md border-brutal-sm bg-lime px-2.5 py-0.5 text-xs font-black uppercase text-ink shadow-brutal-sm mb-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-600 animate-ping" />
+                <div className="inline-flex items-center gap-2 rounded-md border-brutal-sm bg-lime px-2.5 py-1 text-xs font-black uppercase text-ink shadow-brutal-sm mb-2">
+                  <StatusPulse size="xs" status="active" />
                   <span>Real-Time Availability</span>
                 </div>
-                <h2 className="font-display text-3xl sm:text-4xl font-black text-ink">
-                  🟢 Free today in your city
+                <h2 className="flex items-center gap-3 font-display text-3xl sm:text-4xl font-black text-ink">
+                  <StatusPulse size="sm" status="active" />
+                  <span>Free today in your city</span>
                 </h2>
                 <p className="font-body text-sm text-ink-soft mt-1">
                   Need plans for later today? These verified hosts have open slots right now.
@@ -300,9 +307,27 @@ export default function HomePage() {
                   style={{ backgroundColor: act.bgHex === '#FFF8EE' ? '#FFFFFF' : '#FFFFFF' }}
                 >
                   <div>
-                    <span className="text-3xl sm:text-4xl block mb-3 group-hover:scale-110 transition-transform">
-                      {act.emoji}
-                    </span>
+                    <div className="mb-3">
+                      <ActivityIcon
+                        slug={act.slug}
+                        size="md"
+                        variant="tile"
+                        bgVariant={
+                          act.slug === 'gym-partner' || act.slug === 'sports-partner'
+                            ? 'lime'
+                            : act.slug === 'movie-buddy' || act.slug === 'festival-buddy'
+                            ? 'sunny'
+                            : act.slug === 'shopping-buddy' || act.slug === 'comedy-and-shows'
+                            ? 'pink'
+                            : act.slug === 'city-guide' || act.slug === 'photo-walk' || act.slug === 'travel-buddy'
+                            ? 'sky'
+                            : act.slug === 'event-plus-one' || act.slug === 'gaming-partner'
+                            ? 'lavender'
+                            : 'paper'
+                        }
+                        animated
+                      />
+                    </div>
                     <h3 className="font-display text-base sm:text-lg font-black text-ink">
                       {act.name}
                     </h3>

@@ -22,6 +22,7 @@ import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
+import { ActivityIcon } from '@/components/ui/activity-icon';
 import { COMPANIONS } from '@/lib/data/companions';
 import { ACTIVITIES } from '@/lib/data/activities';
 import { calculatePrice, formatRupees } from '@/lib/utils';
@@ -193,8 +194,8 @@ function BookPageContent({ params }: BookPageProps) {
            SUCCESS SCREEN: PROTECTED MEETUP CONFIRMED & 4-DIGIT CODE
            ========================================================================= */
         <div className="rounded-3xl border-brutal bg-white p-6 sm:p-12 shadow-brutal-lg max-w-2xl mx-auto text-center space-y-7 animate-in fade-in duration-300">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border-brutal bg-lime shadow-brutal text-3xl">
-            🎉
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border-brutal bg-lime shadow-brutal text-ink">
+            <CheckCircle2 className="h-10 w-10 stroke-[2.5]" />
           </div>
 
           <div className="space-y-2">
@@ -345,13 +346,13 @@ function BookPageContent({ params }: BookPageProps) {
                           key={slug}
                           type="button"
                           onClick={() => setSelectedActivity(slug)}
-                          className={`inline-flex items-center gap-1.5 rounded-xl border-brutal-sm px-3.5 py-2 font-display text-xs font-black transition-all cursor-pointer ${
+                          className={`group inline-flex items-center gap-1.5 rounded-xl border-brutal-sm px-3.5 py-2 font-display text-xs font-black transition-all cursor-pointer ${
                             isSelected
                               ? 'bg-ink text-paper shadow-brutal-sm'
                               : 'bg-paper-deep text-ink hover:bg-sunny'
                           }`}
                         >
-                          <span>{act?.emoji}</span>
+                          <ActivityIcon slug={slug} size="xs" animated />
                           <span>{act?.name}</span>
                         </button>
                       );

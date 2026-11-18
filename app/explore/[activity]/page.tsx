@@ -1,12 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ShieldCheck, CheckCircle2, Sparkles } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, CheckCircle2, Sparkles, MapPin, Lock, KeyRound } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { CompanionCard } from '@/components/companion/companion-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ActivityIcon } from '@/components/ui/activity-icon';
 import { ACTIVITIES } from '@/lib/data/activities';
 import { COMPANIONS } from '@/lib/data/companions';
 import { ActivityCategory } from '@/lib/types';
@@ -68,7 +69,13 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
           {/* Activity Hero Banner */}
           <div className="rounded-3xl border-brutal bg-white p-8 sm:p-12 shadow-brutal-lg space-y-6">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-4xl sm:text-5xl">{currentActivity.emoji}</span>
+              <ActivityIcon
+                slug={currentActivity.slug}
+                size="xl"
+                variant="tile"
+                bgVariant="sunny"
+                animated
+              />
               <Badge variant="lime" size="md">
                 Activity Hub
               </Badge>
@@ -88,8 +95,9 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
             {/* Safety & Protocol Highlights */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t-brutal-sm">
               <div className="rounded-xl border-brutal-sm bg-paper p-3.5 space-y-1">
-                <span className="block font-display text-xs font-black text-ink">
-                  📍 Public Spaces Only
+                <span className="flex items-center gap-1.5 font-display text-xs font-black text-ink">
+                  <MapPin className="h-3.5 w-3.5 text-ink stroke-[2.25]" />
+                  <span>Public Spaces Only</span>
                 </span>
                 <p className="text-xs text-ink-soft">
                   Verified gyms, cafes, sports turfs, and public avenues.
@@ -97,8 +105,9 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
               </div>
 
               <div className="rounded-xl border-brutal-sm bg-paper p-3.5 space-y-1">
-                <span className="block font-display text-xs font-black text-ink">
-                  🔐 Escrow Protection
+                <span className="flex items-center gap-1.5 font-display text-xs font-black text-ink">
+                  <Lock className="h-3.5 w-3.5 text-ink stroke-[2.25]" />
+                  <span>Escrow Protection</span>
                 </span>
                 <p className="text-xs text-ink-soft">
                   Pay securely; funds release only after the session concludes.
@@ -106,8 +115,9 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
               </div>
 
               <div className="rounded-xl border-brutal-sm bg-paper p-3.5 space-y-1">
-                <span className="block font-display text-xs font-black text-ink">
-                  🔢 4-Digit Code
+                <span className="flex items-center gap-1.5 font-display text-xs font-black text-ink">
+                  <KeyRound className="h-3.5 w-3.5 text-ink stroke-[2.25]" />
+                  <span>4-Digit Start Code</span>
                 </span>
                 <p className="text-xs text-ink-soft">
                   Start code mutual verification required at venue.

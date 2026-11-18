@@ -64,8 +64,9 @@ export default async function CityCompanionsPage({ params }: CityPageProps) {
           {/* City Header Card */}
           <div className="rounded-3xl border-brutal bg-white p-8 sm:p-12 shadow-brutal-lg space-y-6">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="lime" size="md">
-                📍 {currentCity.name} Hub
+              <Badge variant="lime" size="md" className="inline-flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 stroke-[2.25]" />
+                <span>{currentCity.name} Hub</span>
               </Badge>
               <Badge variant="sunny" size="md">
                 {currentCity.state}
@@ -89,9 +90,10 @@ export default async function CityCompanionsPage({ params }: CityPageProps) {
                 {currentCity.popularAreas.map((area) => (
                   <span
                     key={area}
-                    className="rounded-lg border-brutal-sm bg-paper px-2.5 py-1 text-xs font-bold text-ink"
+                    className="inline-flex items-center gap-1 rounded-lg border-brutal-sm bg-paper px-2.5 py-1 text-xs font-bold text-ink"
                   >
-                    📍 {area}
+                    <MapPin className="h-3 w-3 text-ink-muted stroke-[2.25]" />
+                    <span>{area}</span>
                   </span>
                 ))}
               </div>

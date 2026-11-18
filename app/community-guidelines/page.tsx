@@ -68,20 +68,20 @@ export default function CommunityGuidelinesPage() {
               </div>
 
               <ul className="space-y-3 font-body text-sm text-ink-soft">
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-ink">✓</span>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[2.25]" />
                   <span><strong>Daylight Public Meetups:</strong> Cafes, malls, gym chains, food streets, and public parks.</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-ink">✓</span>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[2.25]" />
                   <span><strong>Punctuality & Communication:</strong> Arrive on time and coordinate through in-app chat.</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-ink">✓</span>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[2.25]" />
                   <span><strong>Respecting Boundaries:</strong> Treat your companion with courtesy, active listening, and warmth.</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-ink">✓</span>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[2.25]" />
                   <span><strong>Code Exchange:</strong> Always verbally share the 4-digit start code to activate the session.</span>
                 </li>
               </ul>
@@ -95,20 +95,20 @@ export default function CommunityGuidelinesPage() {
               </div>
 
               <ul className="space-y-3 font-body text-sm text-ink-soft">
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-danger">✕</span>
+                <li className="flex items-start gap-2.5">
+                  <XCircle className="h-4 w-4 text-danger shrink-0 mt-0.5 stroke-[2.25]" />
                   <span><strong>Private Residences or Hotels:</strong> Never meet in homes, Airbnb apartments, or hotel rooms.</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-danger">✕</span>
+                <li className="flex items-start gap-2.5">
+                  <XCircle className="h-4 w-4 text-danger shrink-0 mt-0.5 stroke-[2.25]" />
                   <span><strong>Off-Platform Payments:</strong> Cash or direct UPI transfers outside our escrow vault are banned.</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-danger">✕</span>
+                <li className="flex items-start gap-2.5">
+                  <XCircle className="h-4 w-4 text-danger shrink-0 mt-0.5 stroke-[2.25]" />
                   <span><strong>Romantic or Sexual Solicitations:</strong> Zero tolerance for flirting, touching, or intimacy requests.</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-danger">✕</span>
+                <li className="flex items-start gap-2.5">
+                  <XCircle className="h-4 w-4 text-danger shrink-0 mt-0.5 stroke-[2.25]" />
                   <span><strong>Substance Abuse or Alcohol Pressure:</strong> Never pressure a companion to drink or consume substances.</span>
                 </li>
               </ul>

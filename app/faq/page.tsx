@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Sparkles, Info, ShieldCheck, Lock, Briefcase } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { Accordion } from '@/components/ui/accordion';
@@ -120,24 +121,29 @@ export default function FAQPage() {
           {/* Category Filter Pills */}
           <div className="flex flex-wrap justify-center gap-2">
             {[
-              { id: 'all', label: '✨ All Questions' },
-              { id: 'general', label: '👋 About Togethr' },
-              { id: 'safety', label: '🛡️ Trust & Safety' },
-              { id: 'payments', label: '🔐 Payments & Escrow' },
-              { id: 'hosts', label: '💼 Host Earnings' },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id as any)}
-                className={`rounded-full border-brutal-sm px-4 py-1.5 font-display text-xs font-black transition-all cursor-pointer ${
-                  activeCategory === cat.id
-                    ? 'bg-ink text-paper shadow-brutal-sm'
-                    : 'bg-white text-ink hover:bg-paper-deep'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+              { id: 'all', label: 'All Questions', icon: Sparkles },
+              { id: 'general', label: 'About Togethr', icon: Info },
+              { id: 'safety', label: 'Trust & Safety', icon: ShieldCheck },
+              { id: 'payments', label: 'Payments & Escrow', icon: Lock },
+              { id: 'hosts', label: 'Host Earnings', icon: Briefcase },
+            ].map((cat) => {
+              const Icon = cat.icon;
+              const isSelected = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id as any)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border-brutal-sm px-4 py-1.5 font-display text-xs font-black transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-ink text-paper shadow-brutal-sm'
+                      : 'bg-white text-ink hover:bg-paper-deep'
+                  }`}
+                >
+                  <Icon className={`h-3.5 w-3.5 stroke-[2.25] ${isSelected ? 'text-sunny' : 'text-ink-soft'}`} />
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Accordion Directory */}

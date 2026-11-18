@@ -16,7 +16,9 @@ import {
   XCircle,
   Star,
   Loader2,
+  Check,
 } from 'lucide-react';
+import { StatusPulse } from '@/components/ui/status-pulse';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
@@ -160,24 +162,42 @@ export default function MemberBookingsPage() {
           </div>
 
           {/* Tab Selector */}
-          <div className="flex gap-2 border-b-brutal pb-2">
-            {[
-              { id: 'active', label: `🟢 Active & Upcoming (${activeBookings.length})` },
-              { id: 'completed', label: `✓ Completed (${completedBookings.length})` },
-              { id: 'cancelled', label: `Refunded (${cancelledBookings.length})` },
-            ].map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id as any)}
-                className={`rounded-xl border-brutal-sm px-4 py-2 font-display text-xs font-black transition-all cursor-pointer ${
-                  activeTab === t.id
-                    ? 'bg-ink text-paper shadow-brutal-sm'
-                    : 'bg-white text-ink hover:bg-paper-deep'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-2 border-b-brutal pb-2">
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`inline-flex items-center gap-2 rounded-xl border-brutal-sm px-4 py-2 font-display text-xs font-black transition-all cursor-pointer ${
+                activeTab === 'active'
+                  ? 'bg-ink text-paper shadow-brutal-sm'
+                  : 'bg-white text-ink hover:bg-paper-deep'
+              }`}
+            >
+              <StatusPulse size="xs" status="active" />
+              <span>Active & Upcoming ({activeBookings.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('completed')}
+              className={`inline-flex items-center gap-1.5 rounded-xl border-brutal-sm px-4 py-2 font-display text-xs font-black transition-all cursor-pointer ${
+                activeTab === 'completed'
+                  ? 'bg-ink text-paper shadow-brutal-sm'
+                  : 'bg-white text-ink hover:bg-paper-deep'
+              }`}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 stroke-[2.25]" />
+              <span>Completed ({completedBookings.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('cancelled')}
+              className={`inline-flex items-center gap-1.5 rounded-xl border-brutal-sm px-4 py-2 font-display text-xs font-black transition-all cursor-pointer ${
+                activeTab === 'cancelled'
+                  ? 'bg-ink text-paper shadow-brutal-sm'
+                  : 'bg-white text-ink hover:bg-paper-deep'
+              }`}
+            >
+              <RotateCcw className="h-3.5 w-3.5 stroke-[2.25]" />
+              <span>Refunded ({cancelledBookings.length})</span>
+            </button>
           </div>
 
           {/* Active Tab */}
@@ -225,8 +245,9 @@ export default function MemberBookingsPage() {
                         </div>
                       </div>
 
-                      <Badge variant={booking.rawStatus === 'in_progress' ? 'sunny' : 'lime'} size="md">
-                        🟢 {booking.status}
+                      <Badge variant={booking.rawStatus === 'in_progress' ? 'sunny' : 'lime'} size="md" className="inline-flex items-center gap-1.5">
+                        <StatusPulse size="xs" status="active" />
+                        <span>{booking.status}</span>
                       </Badge>
                     </div>
 
@@ -246,8 +267,9 @@ export default function MemberBookingsPage() {
                     {/* Logistics Info */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-extrabold text-ink">
                       <div className="rounded-xl border-brutal-sm bg-paper p-3.5 space-y-1">
-                        <span className="text-[10px] uppercase font-bold text-ink-muted block">
-                          📍 Public Venue
+                        <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-ink-muted">
+                          <MapPin className="h-3 w-3 text-ink stroke-[2.25]" />
+                          <span>Public Venue</span>
                         </span>
                         <span className="block">{booking.meetingPoint}</span>
                       </div>
@@ -337,8 +359,9 @@ export default function MemberBookingsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Badge variant="lime" size="sm">
-                        ✓ Meetup Completed
+                      <Badge variant="lime" size="sm" className="inline-flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 stroke-[2.25]" />
+                        <span>Meetup Completed</span>
                       </Badge>
                       <button
                         onClick={() => setReviewModalBooking(b)}
@@ -406,7 +429,10 @@ export default function MemberBookingsPage() {
                 </p>
 
                 <div className="rounded-xl border-brutal-sm bg-lime-soft p-3 text-xs font-bold text-ink space-y-1">
-                  <span>💰 100% Full Escrow Refund:</span>
+                  <span className="flex items-center gap-1.5 font-display text-xs font-black">
+                    <CheckCircle2 className="h-4 w-4 text-ink stroke-[2.25]" />
+                    <span>100% Full Escrow Refund:</span>
+                  </span>
                   <p className="font-mono text-sm font-black text-ink">
                     {formatRupees(cancelModalBooking.escrowAmount)} will be released back to you immediately.
                   </p>

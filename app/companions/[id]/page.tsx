@@ -13,11 +13,14 @@ import {
   ArrowLeft,
   Clock,
   HeartHandshake,
+  Users,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { PriceSummary } from '@/components/booking/price-summary';
 import { Badge } from '@/components/ui/badge';
+import { ActivityIcon } from '@/components/ui/activity-icon';
+import { StatusPulse } from '@/components/ui/status-pulse';
 import { COMPANIONS } from '@/lib/data/companions';
 import { ACTIVITIES } from '@/lib/data/activities';
 import type { Metadata } from 'next';
@@ -103,14 +106,16 @@ export default async function CompanionProfilePage({ params }: CompanionProfileP
                       </span>
 
                       {companion.isFreeToday && (
-                        <Badge variant="lime" size="sm">
-                          🟢 Free Today
+                        <Badge variant="lime" size="sm" className="inline-flex items-center gap-1.5">
+                          <StatusPulse size="xs" status="active" />
+                          <span>Free Today</span>
                         </Badge>
                       )}
 
                       {companion.acceptsWomenOnly && (
-                        <Badge variant="pink" size="sm">
-                          👩 Women Hosts Only
+                        <Badge variant="pink" size="sm" className="inline-flex items-center gap-1.5">
+                          <ShieldCheck className="h-3 w-3 text-pink-700 stroke-[2.25]" />
+                          <span>Women Hosts Only</span>
                         </Badge>
                       )}
                     </div>
@@ -140,22 +145,25 @@ export default async function CompanionProfilePage({ params }: CompanionProfileP
                 {/* Quick Attributes Bar */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t-brutal-sm text-xs font-extrabold text-ink">
                   <div className="rounded-xl border-brutal-sm bg-paper p-3 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-ink-muted block">
-                      📍 Area
+                    <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-ink-muted">
+                      <MapPin className="h-3 w-3 text-ink stroke-[2.25]" />
+                      <span>Area</span>
                     </span>
                     <span className="truncate block">{companion.area}</span>
                   </div>
 
                   <div className="rounded-xl border-brutal-sm bg-paper p-3 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-ink-muted block">
-                      🗣 Languages
+                    <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-ink-muted">
+                      <Languages className="h-3 w-3 text-ink stroke-[2.25]" />
+                      <span>Languages</span>
                     </span>
                     <span className="truncate block">{companion.languages.join(', ')}</span>
                   </div>
 
                   <div className="rounded-xl border-brutal-sm bg-paper p-3 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-ink-muted block">
-                      ★ Rating
+                    <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-ink-muted">
+                      <Star className="h-3 w-3 fill-ink text-ink" />
+                      <span>Rating</span>
                     </span>
                     <span className="block">
                       {companion.rating.toFixed(1)} ({companion.reviewCount} reviews)
@@ -163,8 +171,9 @@ export default async function CompanionProfilePage({ params }: CompanionProfileP
                   </div>
 
                   <div className="rounded-xl border-brutal-sm bg-paper p-3 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-ink-muted block">
-                      🤝 Experience
+                    <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-ink-muted">
+                      <Users className="h-3 w-3 text-ink stroke-[2.25]" />
+                      <span>Experience</span>
                     </span>
                     <span className="block">{companion.meetupsCount} meetups done</span>
                   </div>
@@ -190,9 +199,9 @@ export default async function CompanionProfilePage({ params }: CompanionProfileP
                       <Link
                         key={act!.slug}
                         href={`/explore/${act!.slug}`}
-                        className="inline-flex items-center gap-1.5 rounded-xl border-brutal-sm bg-paper-deep px-3 py-1.5 font-display text-xs font-bold text-ink hover:bg-sunny btn-press transition-colors"
+                        className="group inline-flex items-center gap-1.5 rounded-xl border-brutal-sm bg-paper-deep px-3 py-1.5 font-display text-xs font-bold text-ink hover:bg-sunny btn-press transition-colors"
                       >
-                        <span>{act!.emoji}</span>
+                        <ActivityIcon slug={act!.slug} size="xs" animated />
                         <span>{act!.name}</span>
                       </Link>
                     ))}

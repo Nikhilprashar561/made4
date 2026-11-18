@@ -218,10 +218,9 @@ export function MobileDrawer({ isOpen, onClose, selectedCity }: MobileDrawerProp
         )}
 
         {/* Emergency Alert Callout */}
-        <div className="rounded-xl border-brutal-sm bg-danger-soft p-2.5 text-center">
-          <p className="text-[11px] font-bold text-danger">
-            🚨 Immediate Emergency in India? Call <span className="underline">112</span> directly.
-          </p>
+        <div className="rounded-xl border-brutal-sm bg-danger-soft p-2.5 text-center flex items-center justify-center gap-1.5 text-[11px] font-bold text-danger">
+          <ShieldAlert className="h-3.5 w-3.5 shrink-0 stroke-[2.25]" />
+          <span>Immediate Emergency in India? Call <span className="underline">112</span> directly.</span>
         </div>
       </div>
     </div>

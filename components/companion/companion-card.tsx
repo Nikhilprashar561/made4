@@ -1,11 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, ShieldCheck, Camera, MapPin, ArrowRight } from 'lucide-react';
+import { Star, ShieldCheck, Camera, MapPin, ArrowRight, Calendar, Sparkles } from 'lucide-react';
 import { Companion } from '@/lib/types';
 import { ACTIVITIES } from '@/lib/data/activities';
 import { formatRupees } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { ActivityIcon } from '@/components/ui/activity-icon';
+import { StatusPulse } from '@/components/ui/status-pulse';
 
 interface CompanionCardProps {
   companion: Companion;
@@ -24,22 +26,26 @@ export function CompanionCard({ companion, featured = false }: CompanionCardProp
         {/* Top Badges Row */}
         <div className="flex items-center justify-between gap-2 pb-3">
           {companion.isFreeToday ? (
-            <Badge variant="lime" size="sm" className="animate-pulse-subtle">
-              🟢 Free Today
+            <Badge variant="lime" size="sm" className="inline-flex items-center gap-1.5">
+              <StatusPulse size="xs" status="active" />
+              <span>Free Today</span>
             </Badge>
           ) : companion.isWeekendOnly ? (
-            <Badge variant="sunny" size="sm">
-              🗓️ Weekend Only
+            <Badge variant="sunny" size="sm" className="inline-flex items-center gap-1.5">
+              <Calendar className="h-3 w-3 stroke-[2.25]" />
+              <span>Weekend Only</span>
             </Badge>
           ) : (
-            <Badge variant="paper" size="sm">
-              ⚡ Available
+            <Badge variant="paper" size="sm" className="inline-flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3 stroke-[2.25] text-sunny" />
+              <span>Available</span>
             </Badge>
           )}
 
           {companion.acceptsWomenOnly && (
-            <Badge variant="pink" size="sm">
-              👩 Women-Only
+            <Badge variant="pink" size="sm" className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-3 w-3 stroke-[2.25] text-pink-700" />
+              <span>Women-Only</span>
             </Badge>
           )}
         </div>
@@ -104,9 +110,9 @@ export function CompanionCard({ companion, featured = false }: CompanionCardProp
           {companionActivities.slice(0, 3).map((act) => (
             <span
               key={act!.slug}
-              className="inline-flex items-center gap-1 rounded-lg border-brutal-sm bg-paper-deep px-2 py-0.5 text-[11px] font-bold text-ink"
+              className="group/pill inline-flex items-center gap-1 rounded-lg border-brutal-sm bg-paper-deep px-2 py-0.5 text-[11px] font-bold text-ink"
             >
-              <span>{act!.emoji}</span>
+              <ActivityIcon slug={act!.slug} size="xs" animated />
               <span>{act!.name}</span>
             </span>
           ))}

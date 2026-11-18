@@ -257,8 +257,8 @@ export default function HostKYCPage() {
           {submitted ? (
             /* Success State */
             <div className="rounded-2xl border-brutal bg-lime-soft p-8 text-center space-y-5 animate-in fade-in">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-brutal bg-lime shadow-brutal-sm text-2xl">
-                🛡️
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border-brutal bg-lime shadow-brutal-sm text-ink">
+                <ShieldCheck className="h-8 w-8 stroke-[2.5]" />
               </div>
               <div className="space-y-1">
                 <h2 className="font-display text-2xl font-black text-ink">
@@ -461,8 +461,9 @@ export default function HostKYCPage() {
                         <span className="font-display text-sm font-black text-ink">
                           {aadhaarFileName}
                         </span>
-                        <span className="text-xs text-lime font-bold">
-                          ✓ File selected (Click to replace)
+                        <span className="inline-flex items-center gap-1 text-xs text-lime font-bold">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>File selected (Click to replace)</span>
                         </span>
                       </div>
                     ) : (

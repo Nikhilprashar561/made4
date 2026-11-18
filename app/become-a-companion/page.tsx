@@ -12,6 +12,7 @@ import {
   Lock,
   Heart,
   Users,
+  ShieldAlert,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -212,27 +213,30 @@ export default function BecomeACompanionPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-body text-sm text-ink-soft">
               <div className="rounded-xl border-brutal-sm bg-paper p-4 space-y-1.5">
-                <strong className="text-ink font-display block text-sm">
-                  👩 Women-Only Toggle
-                </strong>
+                <span className="flex items-center gap-1.5 text-ink font-display text-sm font-black">
+                  <ShieldCheck className="h-4 w-4 text-pink-700 stroke-[2.25]" />
+                  <span>Women-Only Toggle</span>
+                </span>
                 <p className="text-xs">
                   Female hosts can restrict bookings exclusively to verified female members.
                 </p>
               </div>
 
               <div className="rounded-xl border-brutal-sm bg-paper p-4 space-y-1.5">
-                <strong className="text-ink font-display block text-sm">
-                  🚫 Zero Tolerance for Misconduct
-                </strong>
+                <span className="flex items-center gap-1.5 text-ink font-display text-sm font-black">
+                  <ShieldAlert className="h-4 w-4 text-danger stroke-[2.25]" />
+                  <span>Zero Tolerance for Misconduct</span>
+                </span>
                 <p className="text-xs">
                   Any inappropriate comment, advance, or rule violation results in an immediate permanent ban.
                 </p>
               </div>
 
               <div className="rounded-xl border-brutal-sm bg-paper p-4 space-y-1.5">
-                <strong className="text-ink font-display block text-sm">
-                  💸 Guaranteed Escrow Payouts
-                </strong>
+                <span className="flex items-center gap-1.5 text-ink font-display text-sm font-black">
+                  <Wallet className="h-4 w-4 text-emerald-700 stroke-[2.25]" />
+                  <span>Guaranteed Escrow Payouts</span>
+                </span>
                 <p className="text-xs">
                   No haggling or cash chasing. Member payments are locked in escrow before you show up.
                 </p>
