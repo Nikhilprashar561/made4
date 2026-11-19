@@ -1,5 +1,6 @@
 'use server';
 
+import crypto from 'crypto';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { revalidatePath } from 'next/cache';
@@ -19,6 +20,7 @@ export interface CreateBookingInput {
   hourlyRate: number;
   razorpayPaymentId?: string;
   razorpayOrderId?: string;
+  razorpaySignature?: string;
 }
 
 export async function createBookingAction(input: CreateBookingInput) {
@@ -31,6 +33,22 @@ export async function createBookingAction(input: CreateBookingInput) {
     // Generate 4-digit mutual start verification code
     const startCode = Math.floor(1000 + Math.random() * 9000).toString();
     const bookingId = `tog-book-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    // Verify cryptographic signature if provided
+    if (input.razorpaySignature && input.razorpayOrderId && input.razorpayPaymentId) {
+      const secret = process.env.RAZORPAY_KEY_SECRET;
+      if (secret) {
+        const expectedSignature = crypto
+          .createHmac('sha256', secret)
+          .update(`${input.razorpayOrderId}|${input.razorpayPaymentId}`)
+          .digest('hex');
+        if (expectedSignature === input.razorpaySignature) {
+          console.log(`[Razorpay Signature Verified] Booking ${bookingId} authenticity confirmed.`);
+        } else {
+          console.warn(`[Razorpay Warning] Signature mismatch on booking ${bookingId}`);
+        }
+      }
+    }
 
     const newBooking: schema.InsertBooking = {
       id: bookingId,

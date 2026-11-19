@@ -202,6 +202,7 @@ function BookPageContent({ params }: BookPageProps) {
               hourlyRate: companion.hourlyRate,
               razorpayPaymentId: paymentResponse.razorpay_payment_id,
               razorpayOrderId: paymentResponse.razorpay_order_id || orderData.orderId,
+              razorpaySignature: paymentResponse.razorpay_signature,
             });
 
             if (res.success && res.startCode) {
