@@ -29,6 +29,7 @@ import { calculatePrice, formatRupees } from '@/lib/utils';
 import { ActivityCategory } from '@/lib/types';
 import { createBookingAction } from '@/app/actions/booking';
 import { useAuth } from '@/context/auth-context';
+import { openRazorpayCheckout } from '@/lib/payments/razorpay';
 
 interface BookPageProps {
   params: Promise<{
@@ -145,33 +146,87 @@ function BookPageContent({ params }: BookPageProps) {
 
     setIsSubmitting(true);
     try {
-      const res = await createBookingAction({
-        companionId: companion.id,
-        memberId: user?.id,
-        memberName: data.memberName.trim(),
-        memberPhone: `+91 ${phoneRaw}`,
-        activitySlug: selectedActivity,
-        date,
-        startTime: `${time} IST`,
-        durationHours: duration,
-        meetingPoint: data.meetingPoint.trim(),
-        note: data.note.trim() || undefined,
-        hourlyRate: companion.hourlyRate,
+      // 1. Initiate order with server
+      const orderRes = await fetch('/api/payments/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hourlyRate: companion.hourlyRate,
+          durationHours: duration,
+        }),
       });
 
-      if (res.success && res.startCode) {
-        setStartCode(res.startCode);
-        setConfirmedBookingId(res.bookingId ? `#TGR-${res.bookingId.slice(-6)}` : '#TGR-1029');
-        setBookingSuccess(true);
-        toast.success('Your meetup request has been confirmed! Save your 4-digit code.', 'Booking Confirmed');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        toast.error(res.error || 'Failed to confirm booking. Please try again.', 'Booking Error');
+      const orderData = await orderRes.json();
+      if (!orderRes.ok || !orderData.success) {
+        toast.error(orderData.error || 'Failed to initiate secure checkout. Please try again.', 'Payment Error');
+        setIsSubmitting(false);
+        return;
       }
+
+      // 2. Open Razorpay Standard Checkout Modal
+      await openRazorpayCheckout({
+        key: orderData.keyId,
+        amount: orderData.amountPaise,
+        currency: 'INR',
+        name: 'Togethr Safe Escrow',
+        description: `${selectedActivity.replace(/-/g, ' ')} with ${companion.name}`,
+        order_id: orderData.orderId,
+        prefill: {
+          name: data.memberName.trim(),
+          contact: phoneRaw,
+          email: user?.phone ? `${user.phone}@member.togethr.in` : undefined,
+        },
+        theme: {
+          color: '#121212',
+        },
+        modal: {
+          ondismiss: () => {
+            setIsSubmitting(false);
+            toast.error('Payment checkout was dismissed. Your meetup was not reserved.', 'Payment Cancelled');
+          },
+        },
+        handler: async (paymentResponse) => {
+          try {
+            // 3. Confirm booking and lock funds into database
+            const res = await createBookingAction({
+              companionId: companion.id,
+              memberId: user?.id,
+              memberName: data.memberName.trim(),
+              memberPhone: `+91 ${phoneRaw}`,
+              activitySlug: selectedActivity,
+              date,
+              startTime: `${time} IST`,
+              durationHours: duration,
+              meetingPoint: data.meetingPoint.trim(),
+              note: data.note.trim() || undefined,
+              hourlyRate: companion.hourlyRate,
+              razorpayPaymentId: paymentResponse.razorpay_payment_id,
+              razorpayOrderId: paymentResponse.razorpay_order_id || orderData.orderId,
+            });
+
+            if (res.success && res.startCode) {
+              setStartCode(res.startCode);
+              setConfirmedBookingId(res.bookingId ? `#TGR-${res.bookingId.slice(-6)}` : '#TGR-1029');
+              setBookingSuccess(true);
+              toast.success(
+                `Payment verified (${paymentResponse.razorpay_payment_id}). Locked in Safe Escrow!`,
+                'Booking Confirmed'
+              );
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              toast.error(res.error || 'Failed to confirm booking record.', 'Booking Error');
+            }
+          } catch (err) {
+            console.error(err);
+            toast.error('Payment succeeded but failed to confirm booking record.', 'Sync Error');
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+      });
     } catch (err) {
-      console.error(err);
-      toast.error('An unexpected error occurred while placing your booking. Please try again.', 'Error');
-    } finally {
+      console.error('Checkout error:', err);
+      toast.error('Unable to open payment modal. Please check your internet connection.', 'Connection Error');
       setIsSubmitting(false);
     }
   };
@@ -467,9 +522,15 @@ function BookPageContent({ params }: BookPageProps) {
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <span>Confirming your booking securely...</span>
+                    <span className="flex items-center justify-center gap-2">
+                      <Lock className="h-4 w-4 animate-spin" />
+                      <span>Connecting to Razorpay Secure Vault...</span>
+                    </span>
                   ) : (
-                    <span>Confirm & Authorize Payment ({formatRupees(price.totalPayable)}) →</span>
+                    <span className="flex items-center justify-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      <span>Pay & Lock in Safe Escrow ({formatRupees(price.totalPayable)}) →</span>
+                    </span>
                   )}
                 </Button>
               </form>

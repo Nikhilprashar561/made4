@@ -18,6 +18,7 @@ export interface CreateBookingInput {
   note?: string;
   hourlyRate: number;
   razorpayPaymentId?: string;
+  razorpayOrderId?: string;
 }
 
 export async function createBookingAction(input: CreateBookingInput) {
@@ -52,7 +53,7 @@ export async function createBookingAction(input: CreateBookingInput) {
       startCode,
       status: 'confirmed',
       paymentStatus: 'paid_escrow',
-      razorpayOrderId: `order_rzp_${Date.now()}`,
+      razorpayOrderId: input.razorpayOrderId || `order_rzp_${Date.now()}`,
       razorpayPaymentId: input.razorpayPaymentId || `pay_test_${Math.random().toString(36).substring(7)}`,
       escrowReleased: false,
     };
